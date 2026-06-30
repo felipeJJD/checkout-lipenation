@@ -1,6 +1,7 @@
 export const CHECKOUT_BRAND_NAME = 'Casa Leonora Cigana Barina';
 export const CHECKOUT_PRODUCT_NAME = 'Materiais do Ritual Cigana Barina';
 export const CHECKOUT_PAGE_TITLE = `${CHECKOUT_BRAND_NAME} - Pagamento`;
+export const CHECKOUT_DEFAULT_OFFER_ID = 'ritual-leonora';
 export const MAX_CARD_INSTALLMENTS = 5;
 export const DELIVERY_WHATSAPP_URL = 'http://redzap.online/2/cliqueaqui';
 export const LEONORA_PROFILE_IMAGE_URL = '/leonora-whatsapp-profile.png';
@@ -16,8 +17,10 @@ export const CARD_INTEREST_RATES: Record<number, number> = {
 export type CheckoutPaymentMethod = 'card' | 'pix';
 
 export interface CheckoutOffer {
+  id: string;
   brandName: string;
   productName: string;
+  baseAmount: number;
   headline: string;
   shortDescription: string;
   confirmationText: string;
@@ -33,8 +36,10 @@ export interface CheckoutOffer {
 }
 
 export const CHECKOUT_OFFER: CheckoutOffer = {
+  id: CHECKOUT_DEFAULT_OFFER_ID,
   brandName: 'Casa Leonora',
   productName: CHECKOUT_PRODUCT_NAME,
+  baseAmount: 130,
   headline: 'Materiais do Ritual Cigana Barina',
   shortDescription:
     'Pague os R$ 130 dos materiais combinados com a Leonora.',
@@ -58,6 +63,15 @@ export const CHECKOUT_OFFER: CheckoutOffer = {
     'Você será direcionado para a conversa de acompanhamento. Não precisa fazer outro pagamento agora.',
   footerText: 'Pagamento seguro. Dados protegidos.',
 };
+
+export const CHECKOUT_OFFERS: Record<string, CheckoutOffer> = {
+  [CHECKOUT_OFFER.id]: CHECKOUT_OFFER,
+};
+
+export function getCheckoutOffer(offerId?: string | null): CheckoutOffer | null {
+  if (!offerId) return CHECKOUT_OFFER;
+  return CHECKOUT_OFFERS[offerId] ?? null;
+}
 
 export interface InstallmentOption {
   value: string;

@@ -17,13 +17,13 @@ export function Layout() {
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 via-violet-600 to-red-600 shadow-lg">
-              <span className="text-xl font-black tracking-tight text-white">DS</span>
+              <span className="text-xl font-black tracking-tight text-white">CL</span>
             </div>
             <div>
               <h2 className="text-2xl font-black bg-gradient-to-r from-white via-blue-200 to-red-200 bg-clip-text text-transparent">
-                DS HUB
+                Casa Leonora
               </h2>
-              <p className="text-white/70 text-sm font-medium">Painel administrativo</p>
+              <p className="text-white/70 text-sm font-medium">Painel da operacao</p>
             </div>
           </div>
           <div className="h-1 bg-gradient-to-r from-blue-500 via-violet-500 to-red-500 rounded-full"></div>
@@ -77,8 +77,8 @@ export function Layout() {
               <LinkIcon className="w-5 h-5 text-white" />
             </div>
             <div className="flex-1">
-              <span className="text-white font-semibold text-base">Gerar Links</span>
-              <p className="text-white/70 text-xs">Criar links de pagamento</p>
+              <span className="text-white font-semibold text-base">Link Leonora</span>
+              <p className="text-white/70 text-xs">Checkout oficial</p>
             </div>
           </Link>
         </nav>
@@ -95,7 +95,7 @@ export function Layout() {
 
           {/* Créditos */}
           <div className="text-center">
-            <p className="text-white/50 text-xs">DS HUB — Débora Soares</p>
+            <p className="text-white/50 text-xs">Checkout Casa Leonora</p>
           </div>
         </div>
       </aside>

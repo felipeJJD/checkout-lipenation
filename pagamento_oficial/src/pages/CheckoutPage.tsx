@@ -30,6 +30,7 @@ import {
   calculateInstallmentAmount,
   CHECKOUT_OFFER,
   CHECKOUT_PAGE_TITLE,
+  getCheckoutOffer,
   getInstallmentOptions,
   type CheckoutPaymentMethod,
 } from '@/config/checkout';
@@ -55,6 +56,7 @@ const checkoutSchema = z.object({
                 return cpf.isValid(cleanedValue) || cnpj.isValid(cleanedValue);
             }, { message: "CPF ou CNPJ inválido" }),
   paymentMethod: z.enum(['card', 'pix']),
+  offerId: z.string().optional(),
   items: z.array(z.object({
     id: z.string().min(1),
     name: z.string().min(1),
@@ -124,14 +126,15 @@ interface CartItem {
 export function CheckoutPage() {
   // Navigation removed - users shouldn't access dashboard
   const [searchParams] = useSearchParams();
-  const customAmountParam = searchParams.get('amount');
+  const offerParam = searchParams.get('oferta') || searchParams.get('offer');
   const previewParam = searchParams.get('preview');
   const previewMethodParam = searchParams.get('method');
   const isSuccessPreview = previewParam === 'success';
   const isPixPreview = previewParam === 'pix';
   const previewPaymentMethod: CheckoutPaymentMethod = previewMethodParam === 'pix' ? 'pix' : 'card';
   const { toast } = useToast();
-  const offer = CHECKOUT_OFFER;
+  const resolvedOffer = useMemo(() => getCheckoutOffer(offerParam), [offerParam]);
+  const offer = resolvedOffer ?? CHECKOUT_OFFER;
   
   // Atualizar título da página
   useEffect(() => {
@@ -140,23 +143,22 @@ export function CheckoutPage() {
 
   // <<< Lógica para definir itens iniciais >>>
   const getInitialCartItems = useCallback((): CartItem[] => {
-    const customAmount = customAmountParam ? parseFloat(customAmountParam) : NaN;
-    if (!isNaN(customAmount) && customAmount > 0) {
-      // Valor sempre vem via ?amount do link gerado
+    if (resolvedOffer) {
+      // Valor fixo da oferta; nao vem mais aberto na URL.
       return [{
-        id: `${offer.productName.toLowerCase().replace(/\s+/g, '-')}-${customAmount.toFixed(2)}`,
-        name: offer.productName,
-        price: customAmount,
+        id: resolvedOffer.id,
+        name: resolvedOffer.productName,
+        price: resolvedOffer.baseAmount,
         quantity: 1
       }];
     } else {
       // Sem amount válido na URL: carrinho vazio. O valor sempre vem do link gerado,
       // então não há fallback hardcoded — o resumo mostra "Carrinho vazio" e o submit
       // é bloqueado pela validação (items.min(1) no front / valor > 0 no backend).
-      console.warn('Nenhum valor válido encontrado na URL (?amount). Acesse o checkout por um link gerado.');
+      console.warn('Oferta invalida no link de checkout.');
       return [];
     }
-  }, [customAmountParam, offer.productName]);
+  }, [resolvedOffer]);
   const [cartItems] = useState<CartItem[]>(getInitialCartItems);
   // <<< Fim da lógica dos itens iniciais >>>
 
@@ -432,6 +434,7 @@ export function CheckoutPage() {
       phone,
       cpfCnpj,
       paymentMethod,
+      offerId: resolvedOffer?.id,
       items: cartItems, // Passa os itens atuais do carrinho
       // Campos do cartão são incluídos condicionalmente abaixo
     };

@@ -1,6 +1,21 @@
 export const MAX_CARD_INSTALLMENTS = 5;
 export const DEFAULT_STATEMENT_DESCRIPTOR = 'DSHUB';
 export const PIX_EXPIRES_IN_SECONDS = 3 * 24 * 60 * 60;
+export const DEFAULT_CHECKOUT_OFFER_ID = 'ritual-leonora';
+
+export interface CheckoutOfferConfig {
+  id: string;
+  amountInCents: number;
+  productName: string;
+}
+
+export const CHECKOUT_OFFERS: Record<string, CheckoutOfferConfig> = {
+  [DEFAULT_CHECKOUT_OFFER_ID]: {
+    id: DEFAULT_CHECKOUT_OFFER_ID,
+    amountInCents: 13000,
+    productName: 'Materiais do Ritual Cigana Barina',
+  },
+};
 
 export const CARD_INTEREST_RATES: Record<number, number> = {
   1: 0,
@@ -27,4 +42,12 @@ export function calculateCardAmountInCents(baseAmountInCents: number, installmen
 
   const interestRate = CARD_INTEREST_RATES[installments] ?? 0;
   return Math.round(baseAmountInCents * (1 + interestRate));
+}
+
+export function resolveCheckoutOffer(offerId?: unknown): CheckoutOfferConfig | null {
+  if (typeof offerId !== 'string' || offerId.trim() === '') {
+    return CHECKOUT_OFFERS[DEFAULT_CHECKOUT_OFFER_ID];
+  }
+
+  return CHECKOUT_OFFERS[offerId] ?? null;
 }

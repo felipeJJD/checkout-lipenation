@@ -6,6 +6,7 @@ import {
   MAX_CARD_INSTALLMENTS,
   normalizePaymentMethod,
   PIX_EXPIRES_IN_SECONDS,
+  resolveCheckoutOffer,
 } from './payment-config';
 
 interface PagarMeError {
@@ -159,7 +160,12 @@ export async function POST(request: Request) {
 
     const body = await request.json();
 
-    const paymentAmount = Math.round((parseFloat(body.amount) || parseFloat(body.items?.[0]?.price) || 0) * 100);
+    const checkoutOffer = resolveCheckoutOffer(body.offerId || body.items?.[0]?.id);
+    if (!checkoutOffer) {
+      return NextResponse.json({ success: false, error: 'Oferta de pagamento invalida.' }, { status: 400, headers: currentCorsHeaders });
+    }
+
+    const paymentAmount = checkoutOffer.amountInCents;
     if (paymentAmount <= 0) {
       return NextResponse.json({ success: false, error: 'Valor de pagamento invalido.' }, { status: 400, headers: currentCorsHeaders });
     }
@@ -197,9 +203,9 @@ export async function POST(request: Request) {
       closed: true,
       items: [{
         amount: finalAmount,
-        description: body.description || body.items?.[0]?.name || 'Produto',
+        description: checkoutOffer.productName,
         quantity: 1,
-        code: body.items?.[0]?.id || `item_${Date.now()}`,
+        code: checkoutOffer.id,
       }],
       customer: {
         name: body.name,
@@ -326,13 +332,18 @@ export async function POST(request: Request) {
 
 function simulatePaymentResponse(body: any, headers: any) {
   const normalizedPaymentMethod = normalizePaymentMethod(body.paymentMethod);
+  const checkoutOffer = resolveCheckoutOffer(body.offerId || body.items?.[0]?.id);
   const now = new Date();
   const orderId = `sim_order_${Date.now()}`;
   const chargeId = `sim_ch_${Date.now()}`;
   const transactionId = `sim_tran_${Date.now()}`;
   const customerId = `sim_cus_${Date.now()}`;
 
-  const paymentAmount = Math.round((parseFloat(body.amount) || parseFloat(body.items?.[0]?.price) || 0) * 100);
+  if (!checkoutOffer) {
+    return NextResponse.json({ success: false, error: 'Oferta de pagamento invalida.' }, { status: 400, headers });
+  }
+
+  const paymentAmount = checkoutOffer.amountInCents;
   const installments = parseInt(body.installments || '1', 10);
   let finalAmount = paymentAmount;
 
@@ -346,7 +357,7 @@ function simulatePaymentResponse(body: any, headers: any) {
     currency: 'BRL',
     status: 'paid',
     customer: { id: customerId, name: body.name, email: body.email },
-    items: [{ amount: finalAmount, description: body.description || 'Produto Simulado', quantity: 1 }],
+    items: [{ amount: finalAmount, description: checkoutOffer.productName, quantity: 1 }],
     charges: [{
       id: chargeId,
       amount: finalAmount,
