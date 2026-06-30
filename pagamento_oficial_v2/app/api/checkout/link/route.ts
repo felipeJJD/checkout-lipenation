@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import {
   CHECKOUT_OFFERS,
-  createSignedCheckoutToken,
+  createCompactCheckoutToken,
   DEFAULT_CHECKOUT_OFFER_ID,
 } from '../payment-config';
 
@@ -83,10 +83,9 @@ export async function POST(request: Request) {
     }
 
     const defaultOffer = CHECKOUT_OFFERS[DEFAULT_CHECKOUT_OFFER_ID];
-    const token = createSignedCheckoutToken({
+    const token = createCompactCheckoutToken({
       amountInCents,
       offerId: DEFAULT_CHECKOUT_OFFER_ID,
-      productName: body.productName || defaultOffer.productName,
     });
 
     return NextResponse.json(

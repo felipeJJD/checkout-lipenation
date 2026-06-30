@@ -58,6 +58,7 @@ const checkoutSchema = z.object({
   paymentMethod: z.enum(['card', 'pix']),
   offerId: z.string().optional(),
   paymentToken: z.string().optional(),
+  compactPaymentToken: z.string().optional(),
   items: z.array(z.object({
     id: z.string().min(1),
     name: z.string().min(1),
@@ -149,9 +150,27 @@ function decodeCheckoutToken(token: string | null): DecodedCheckoutToken | null 
   }
 }
 
+function decodeCompactCheckoutToken(token: string | null): DecodedCheckoutToken | null {
+  if (!token || !token.includes('.')) return null;
+
+  const [amountBase36, offerId] = token.split('.');
+  const amountInCents = Number.parseInt(amountBase36, 36);
+
+  if (!Number.isFinite(amountInCents) || amountInCents <= 0) {
+    return null;
+  }
+
+  return {
+    offerId: offerId || CHECKOUT_OFFER.id,
+    amountInCents,
+    productName: CHECKOUT_OFFER.productName,
+  };
+}
+
 export function CheckoutPage() {
   // Navigation removed - users shouldn't access dashboard
   const [searchParams] = useSearchParams();
+  const compactPaymentTokenParam = searchParams.get('p');
   const paymentTokenParam = searchParams.get('pedido') || searchParams.get('token');
   const offerParam = searchParams.get('oferta') || searchParams.get('offer');
   const previewParam = searchParams.get('preview');
@@ -160,7 +179,9 @@ export function CheckoutPage() {
   const isPixPreview = previewParam === 'pix';
   const previewPaymentMethod: CheckoutPaymentMethod = previewMethodParam === 'pix' ? 'pix' : 'card';
   const { toast } = useToast();
-  const signedCheckout = useMemo(() => decodeCheckoutToken(paymentTokenParam), [paymentTokenParam]);
+  const signedCheckout = useMemo(() => {
+    return decodeCompactCheckoutToken(compactPaymentTokenParam) || decodeCheckoutToken(paymentTokenParam);
+  }, [compactPaymentTokenParam, paymentTokenParam]);
   const resolvedOffer = useMemo(() => getCheckoutOffer(offerParam), [offerParam]);
   const offer = resolvedOffer ?? CHECKOUT_OFFER;
   
@@ -473,6 +494,7 @@ export function CheckoutPage() {
       paymentMethod,
       offerId: resolvedOffer?.id,
       paymentToken: paymentTokenParam || undefined,
+      compactPaymentToken: compactPaymentTokenParam || undefined,
       items: cartItems, // Passa os itens atuais do carrinho
       // Campos do cartão são incluídos condicionalmente abaixo
     };

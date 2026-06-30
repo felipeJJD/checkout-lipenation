@@ -103,7 +103,7 @@ export function LinkGeneratorPage() {
         throw new Error(response.data?.error || 'Falha ao gerar link.');
       }
 
-      const checkoutUrl = `${window.location.origin}/checkout?pedido=${token}`;
+      const checkoutUrl = `${window.location.origin}/checkout?p=${token}`;
       setGeneratedLink(checkoutUrl);
       setGeneratedAmount(amount);
 
@@ -257,8 +257,8 @@ export function LinkGeneratorPage() {
                   Flexivel, mas sem valor editavel
                 </div>
                 <p>
-                  O link personalizado sai com <span className="font-mono">pedido=...</span>.
-                  Se alguem tentar alterar o codigo, o backend recusa o pagamento.
+                  O link personalizado sai com <span className="font-mono">p=...</span>.
+                  Se alguem tentar alterar o codigo curto, o backend recusa o pagamento.
                 </p>
               </div>
             </CardContent>

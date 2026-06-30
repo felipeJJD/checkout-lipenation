@@ -85,6 +85,10 @@ function signTokenPayload(encodedPayload: string, secret: string): string {
   return toBase64Url(createHmac('sha256', secret).update(encodedPayload).digest());
 }
 
+function signCompactPayload(payload: string, secret: string): string {
+  return toBase64Url(createHmac('sha256', secret).update(payload).digest()).slice(0, 12);
+}
+
 export function createSignedCheckoutToken(input: {
   amountInCents: number;
   productName?: string;
@@ -107,6 +111,22 @@ export function createSignedCheckoutToken(input: {
   const signature = signTokenPayload(encodedPayload, secret);
 
   return `${encodedPayload}.${signature}`;
+}
+
+export function createCompactCheckoutToken(input: {
+  amountInCents: number;
+  offerId?: string;
+}): string {
+  const secret = getCheckoutLinkSecret();
+  if (!secret) {
+    throw new Error('CHECKOUT_LINK_SECRET ausente.');
+  }
+
+  const offerId = input.offerId || DEFAULT_CHECKOUT_OFFER_ID;
+  const compactPayload = `${input.amountInCents.toString(36)}.${offerId}`;
+  const signature = signCompactPayload(compactPayload, secret);
+
+  return `${compactPayload}.${signature}`;
 }
 
 export function verifySignedCheckoutToken(token?: unknown): SignedCheckoutPayload | null {
@@ -150,11 +170,53 @@ export function verifySignedCheckoutToken(token?: unknown): SignedCheckoutPayloa
   }
 }
 
+export function verifyCompactCheckoutToken(token?: unknown): CheckoutOfferConfig | null {
+  if (typeof token !== 'string' || !token.includes('.')) return null;
+
+  const secret = getCheckoutLinkSecret();
+  if (!secret) return null;
+
+  const parts = token.split('.');
+  if (parts.length !== 3) return null;
+
+  const [amountBase36, offerId, providedSignature] = parts;
+  if (!amountBase36 || !offerId || !providedSignature) return null;
+
+  const compactPayload = `${amountBase36}.${offerId}`;
+  const expectedSignature = signCompactPayload(compactPayload, secret);
+  const providedBuffer = Buffer.from(providedSignature);
+  const expectedBuffer = Buffer.from(expectedSignature);
+
+  if (
+    providedBuffer.length !== expectedBuffer.length ||
+    !timingSafeEqual(providedBuffer, expectedBuffer)
+  ) {
+    return null;
+  }
+
+  const amountInCents = Number.parseInt(amountBase36, 36);
+  const offer = resolveCheckoutOffer(offerId);
+
+  if (!Number.isInteger(amountInCents) || amountInCents <= 0 || !offer) {
+    return null;
+  }
+
+  return {
+    id: offer.id,
+    amountInCents,
+    productName: offer.productName,
+  };
+}
+
 export function resolveCheckoutPayment(input: {
   paymentToken?: unknown;
+  compactPaymentToken?: unknown;
   offerId?: unknown;
   itemId?: unknown;
 }): CheckoutOfferConfig | null {
+  const compactPayload = verifyCompactCheckoutToken(input.compactPaymentToken);
+  if (compactPayload) return compactPayload;
+
   const signedPayload = verifySignedCheckoutToken(input.paymentToken);
 
   if (signedPayload) {

@@ -162,6 +162,7 @@ export async function POST(request: Request) {
 
     const checkoutOffer = resolveCheckoutPayment({
       paymentToken: body.paymentToken,
+      compactPaymentToken: body.compactPaymentToken,
       offerId: body.offerId,
       itemId: body.items?.[0]?.id,
     });
@@ -338,6 +339,7 @@ function simulatePaymentResponse(body: any, headers: any) {
   const normalizedPaymentMethod = normalizePaymentMethod(body.paymentMethod);
   const checkoutOffer = resolveCheckoutPayment({
     paymentToken: body.paymentToken,
+    compactPaymentToken: body.compactPaymentToken,
     offerId: body.offerId,
     itemId: body.items?.[0]?.id,
   });
