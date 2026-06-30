@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "node .next/standalone/server.js",
+    "start": "HOSTNAME=0.0.0.0 node .next/standalone/server.js",
     "start:next": "next start",
     "lint": "next lint",
     "start:all": "concurrently \"npm run dev\" \"cd pedro-fejao-checkout && npm run dev\"",

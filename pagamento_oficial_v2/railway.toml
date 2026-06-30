@@ -3,7 +3,7 @@ builder = "nixpacks"
 buildCommand = "npm run build && cp -r .next/static .next/standalone/.next/"
 
 [deploy]
-startCommand = "node .next/standalone/server.js"
+startCommand = "HOSTNAME=0.0.0.0 node .next/standalone/server.js"
 healthcheckPath = "/api/health"
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 10
