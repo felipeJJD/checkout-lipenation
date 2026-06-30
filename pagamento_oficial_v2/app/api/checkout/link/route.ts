@@ -101,6 +101,12 @@ export async function POST(request: Request) {
       { status: 200, headers }
     );
   } catch (error) {
+    if (error instanceof Error) {
+      console.error('Erro ao gerar link de checkout:', error.name, error.message);
+    } else {
+      console.error('Erro ao gerar link de checkout: erro desconhecido');
+    }
+
     const isMissingSecret = error instanceof Error && error.message.includes('CHECKOUT_LINK_SECRET');
 
     return NextResponse.json(
