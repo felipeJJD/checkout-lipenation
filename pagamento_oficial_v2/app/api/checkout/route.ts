@@ -6,7 +6,7 @@ import {
   MAX_CARD_INSTALLMENTS,
   normalizePaymentMethod,
   PIX_EXPIRES_IN_SECONDS,
-  resolveCheckoutOffer,
+  resolveCheckoutPayment,
 } from './payment-config';
 
 interface PagarMeError {
@@ -160,7 +160,11 @@ export async function POST(request: Request) {
 
     const body = await request.json();
 
-    const checkoutOffer = resolveCheckoutOffer(body.offerId || body.items?.[0]?.id);
+    const checkoutOffer = resolveCheckoutPayment({
+      paymentToken: body.paymentToken,
+      offerId: body.offerId,
+      itemId: body.items?.[0]?.id,
+    });
     if (!checkoutOffer) {
       return NextResponse.json({ success: false, error: 'Oferta de pagamento invalida.' }, { status: 400, headers: currentCorsHeaders });
     }
@@ -332,7 +336,11 @@ export async function POST(request: Request) {
 
 function simulatePaymentResponse(body: any, headers: any) {
   const normalizedPaymentMethod = normalizePaymentMethod(body.paymentMethod);
-  const checkoutOffer = resolveCheckoutOffer(body.offerId || body.items?.[0]?.id);
+  const checkoutOffer = resolveCheckoutPayment({
+    paymentToken: body.paymentToken,
+    offerId: body.offerId,
+    itemId: body.items?.[0]?.id,
+  });
   const now = new Date();
   const orderId = `sim_order_${Date.now()}`;
   const chargeId = `sim_ch_${Date.now()}`;

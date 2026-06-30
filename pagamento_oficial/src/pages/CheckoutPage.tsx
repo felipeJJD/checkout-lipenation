@@ -57,6 +57,7 @@ const checkoutSchema = z.object({
             }, { message: "CPF ou CNPJ inválido" }),
   paymentMethod: z.enum(['card', 'pix']),
   offerId: z.string().optional(),
+  paymentToken: z.string().optional(),
   items: z.array(z.object({
     id: z.string().min(1),
     name: z.string().min(1),
@@ -123,9 +124,35 @@ interface CartItem {
   quantity: number;
 }
 
+interface DecodedCheckoutToken {
+  offerId: string;
+  amountInCents: number;
+  productName: string;
+}
+
+function decodeCheckoutToken(token: string | null): DecodedCheckoutToken | null {
+  if (!token || !token.includes('.')) return null;
+
+  try {
+    const [payload] = token.split('.');
+    const normalizedPayload = payload.replace(/-/g, '+').replace(/_/g, '/');
+    const paddedPayload = normalizedPayload.padEnd(Math.ceil(normalizedPayload.length / 4) * 4, '=');
+    const parsed = JSON.parse(window.atob(paddedPayload)) as DecodedCheckoutToken;
+
+    if (!parsed.productName || !Number.isFinite(parsed.amountInCents) || parsed.amountInCents <= 0) {
+      return null;
+    }
+
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
 export function CheckoutPage() {
   // Navigation removed - users shouldn't access dashboard
   const [searchParams] = useSearchParams();
+  const paymentTokenParam = searchParams.get('pedido') || searchParams.get('token');
   const offerParam = searchParams.get('oferta') || searchParams.get('offer');
   const previewParam = searchParams.get('preview');
   const previewMethodParam = searchParams.get('method');
@@ -133,6 +160,7 @@ export function CheckoutPage() {
   const isPixPreview = previewParam === 'pix';
   const previewPaymentMethod: CheckoutPaymentMethod = previewMethodParam === 'pix' ? 'pix' : 'card';
   const { toast } = useToast();
+  const signedCheckout = useMemo(() => decodeCheckoutToken(paymentTokenParam), [paymentTokenParam]);
   const resolvedOffer = useMemo(() => getCheckoutOffer(offerParam), [offerParam]);
   const offer = resolvedOffer ?? CHECKOUT_OFFER;
   
@@ -143,6 +171,15 @@ export function CheckoutPage() {
 
   // <<< Lógica para definir itens iniciais >>>
   const getInitialCartItems = useCallback((): CartItem[] => {
+    if (signedCheckout) {
+      return [{
+        id: signedCheckout.offerId || CHECKOUT_OFFER.id,
+        name: signedCheckout.productName,
+        price: signedCheckout.amountInCents / 100,
+        quantity: 1
+      }];
+    }
+
     if (resolvedOffer) {
       // Valor fixo da oferta; nao vem mais aberto na URL.
       return [{
@@ -158,7 +195,7 @@ export function CheckoutPage() {
       console.warn('Oferta invalida no link de checkout.');
       return [];
     }
-  }, [resolvedOffer]);
+  }, [resolvedOffer, signedCheckout]);
   const [cartItems] = useState<CartItem[]>(getInitialCartItems);
   // <<< Fim da lógica dos itens iniciais >>>
 
@@ -435,6 +472,7 @@ export function CheckoutPage() {
       cpfCnpj,
       paymentMethod,
       offerId: resolvedOffer?.id,
+      paymentToken: paymentTokenParam || undefined,
       items: cartItems, // Passa os itens atuais do carrinho
       // Campos do cartão são incluídos condicionalmente abaixo
     };
