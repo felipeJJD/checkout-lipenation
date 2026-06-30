@@ -4,6 +4,6 @@ buildCommand = "npm run build && cp -r .next/static .next/standalone/.next/"
 
 [deploy]
 startCommand = "node .next/standalone/server.js"
-healthcheckPath = "/"
+healthcheckPath = "/api/health"
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 10
