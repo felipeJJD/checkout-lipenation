@@ -1,0 +1,1 @@
+{ "name": "Cliente Teste", "email": "teste@example.com", "ddi": "55", "phone": "(11) 91234-5678", "cpfCnpj": "111.222.333-44", "saveData": true, "paymentMethod": "boleto", "items": [ { "id": "teste123", "name": "Produto Teste", "price": 100.00, "quantity": 1 } ] }

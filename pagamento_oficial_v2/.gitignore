@@ -1,0 +1,46 @@
+# Environments
+.env*
+!.env.example
+
+# Dependency directories
+node_modules/
+pedro-fejao-checkout/node_modules/
+
+# Next.js build output
+.next/
+out/
+
+# Next.js deployment artifacts
+.vercel/
+
+# Next.js misc
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnp/
+.pnp.js
+
+# Vite build output
+pedro-fejao-checkout/dist/
+
+# Vite cache
+.vite
+
+# Editor directories and files
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+nul

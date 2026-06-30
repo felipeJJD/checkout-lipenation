@@ -1,0 +1,41 @@
+# Octogent
+.claude/
+.octogent
+.playwright-mcp
+
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Secrets / environment — NUNCA versionar
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+# Exceção: build-config pública do frontend Vite (só URL do backend, sem segredo).
+# Tudo que é VITE_* já vai pro bundle de qualquer forma.
+
+# Build output
+.next/
+**/.next/
+dist/
+**/dist/
+build/
+**/build/
+out/
+**/out/
+*.tsbuildinfo
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
