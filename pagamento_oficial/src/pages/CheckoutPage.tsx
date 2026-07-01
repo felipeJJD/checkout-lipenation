@@ -59,6 +59,7 @@ const checkoutSchema = z.object({
   offerId: z.string().optional(),
   paymentToken: z.string().optional(),
   compactPaymentToken: z.string().optional(),
+  trackingHash: z.string().optional(),
   items: z.array(z.object({
     id: z.string().min(1),
     name: z.string().min(1),
@@ -173,6 +174,7 @@ export function CheckoutPage() {
   const compactPaymentTokenParam = searchParams.get('p');
   const paymentTokenParam = searchParams.get('pedido') || searchParams.get('token');
   const offerParam = searchParams.get('oferta') || searchParams.get('offer');
+  const trackingHashParam = searchParams.get('h') || searchParams.get('hash');
   const previewParam = searchParams.get('preview');
   const previewMethodParam = searchParams.get('method');
   const isSuccessPreview = previewParam === 'success';
@@ -495,6 +497,7 @@ export function CheckoutPage() {
       offerId: resolvedOffer?.id,
       paymentToken: paymentTokenParam || undefined,
       compactPaymentToken: compactPaymentTokenParam || undefined,
+      trackingHash: trackingHashParam || undefined,
       items: cartItems, // Passa os itens atuais do carrinho
       // Campos do cartão são incluídos condicionalmente abaixo
     };
@@ -628,7 +631,7 @@ export function CheckoutPage() {
                     {offer.headline}
                   </h1>
                   <p className="max-w-xl text-sm leading-relaxed text-stone-700 md:text-base">
-                    {offer.shortDescription}
+                    Confirme {formattedBaseAmount} no link seguro combinado com a Leonora.
                   </p>
                 </div>
 

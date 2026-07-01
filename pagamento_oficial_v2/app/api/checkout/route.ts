@@ -20,6 +20,8 @@ interface PagarMeError {
 
 const ALLOWED_ORIGINS = [
   process.env.FRONTEND_URL_ALLOWED,
+  'https://checkout.ciganaleonora.online',
+  'https://checkout-lipenation-production.up.railway.app',
   'https://gosafepay.com.br',
   'https://checkout-frontend-production-0626.up.railway.app',
 ].filter(Boolean) as string[];
@@ -75,6 +77,8 @@ const FORCE_SIMULATION = process.env.USE_PAYMENT_SIMULATION === 'true';
 
 const API_BASE_URL = 'https://api.pagar.me/core/v5';
 const ORDERS_ENDPOINT = `${API_BASE_URL}/orders`;
+
+const HASH_REGEX = /^[A-HJ-NP-Za-km-z2-9]{6}$/;
 
 // SEGURANÇA: o body do checkout contém cartão/CVV/CPF. Hoje NÃO há nenhum
 // log do body nesta rota — mantenha assim. Se algum dia precisar logar o body
@@ -204,8 +208,24 @@ export async function POST(request: Request) {
       finalAmount = calculateCardAmountInCents(paymentAmount, installments);
     }
 
+    const trackingHash = typeof body.trackingHash === 'string' && HASH_REGEX.test(body.trackingHash.trim())
+      ? body.trackingHash.trim()
+      : undefined;
+    const checkoutCode = `leo-${Date.now().toString(36)}`;
+
     const requestBody: any = {
       closed: true,
+      code: checkoutCode,
+      metadata: JSON.stringify({
+        offer_id: checkoutOffer.id,
+        product_name: checkoutOffer.productName,
+        base_amount_cents: String(paymentAmount),
+        final_amount_cents: String(finalAmount),
+        checkout_token: typeof body.compactPaymentToken === 'string' ? body.compactPaymentToken : '',
+        payment_token: typeof body.paymentToken === 'string' ? body.paymentToken : '',
+        tracking_hash: trackingHash || '',
+        source: 'checkout-leonora',
+      }),
       items: [{
         amount: finalAmount,
         description: checkoutOffer.productName,

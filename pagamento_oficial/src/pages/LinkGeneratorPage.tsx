@@ -35,6 +35,7 @@ export function LinkGeneratorPage() {
   const [amountInput, setAmountInput] = useState('130,00');
   const [generatedLink, setGeneratedLink] = useState('');
   const [generatedAmount, setGeneratedAmount] = useState(CHECKOUT_OFFER.baseAmount);
+  const [hashInput, setHashInput] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [copiedLabel, setCopiedLabel] = useState<string | null>(null);
   const { toast } = useToast();
@@ -103,7 +104,9 @@ export function LinkGeneratorPage() {
         throw new Error(response.data?.error || 'Falha ao gerar link.');
       }
 
-      const checkoutUrl = `${window.location.origin}/checkout?p=${token}`;
+      const cleanHash = hashInput.trim();
+      const hashParam = cleanHash ? `&h=${encodeURIComponent(cleanHash)}` : '';
+      const checkoutUrl = `${window.location.origin}/checkout?p=${token}${hashParam}`;
       setGeneratedLink(checkoutUrl);
       setGeneratedAmount(amount);
 
@@ -128,6 +131,7 @@ export function LinkGeneratorPage() {
 
   const useDefaultLink = () => {
     setAmountInput('130,00');
+    setHashInput('');
     setGeneratedLink('');
     setGeneratedAmount(CHECKOUT_OFFER.baseAmount);
     setCopiedLabel(null);
@@ -191,7 +195,20 @@ export function LinkGeneratorPage() {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-2">
+                  <Label htmlFor="hash">Hash Redzap opcional</Label>
+                  <Input
+                    id="hash"
+                    value={hashInput}
+                    onChange={(event) => setHashInput(event.target.value)}
+                    className="h-12 border-[#dfd4c5] bg-[#fffdf8] font-mono text-sm"
+                    placeholder="Ex: 7RJAY5"
+                    maxLength={12}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
                   <Button
                     type="button"
                     onClick={generateCustomLink}
@@ -213,7 +230,6 @@ export function LinkGeneratorPage() {
                   >
                     Usar R$ 130
                   </Button>
-                </div>
               </div>
 
               <div className="space-y-2">

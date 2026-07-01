@@ -7,6 +7,8 @@ import {
 
 const ALLOWED_ORIGINS = [
   process.env.FRONTEND_URL_ALLOWED,
+  'https://checkout.ciganaleonora.online',
+  'https://checkout-lipenation-production.up.railway.app',
   'https://gosafepay.com.br',
   'https://checkout-frontend-production-0626.up.railway.app',
 ].filter(Boolean) as string[];
